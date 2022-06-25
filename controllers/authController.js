@@ -6,12 +6,12 @@ const User = require('../models/userModel')
 exports.signUp = async (req, res) => {
 
     const { username, password } = req.body
-    
+
     try {
         const hashpassword = await bcrypt.hash(password, 12)
         const newUser = await User.create({ username, password: hashpassword })
-        
-        assignToRedis(newUser,req)
+
+        assignToRedis(newUser, req)
 
         res.status(200).json({
             status: 'success',
@@ -21,6 +21,7 @@ exports.signUp = async (req, res) => {
     } catch (error) {
         res.status(400).json({
             status: 'fail',
+            errorMessage: error
         })
     }
 }
@@ -34,7 +35,8 @@ exports.login = async (req, res) => {
         if (!user)
             return res.status(404).json({
                 status: 'fail',
-                message: 'user not found'
+                message: 'user not found',
+                errorMessage: error
             })
 
         const isCorrect = await bcrypt.compare(password, user.password)
@@ -42,11 +44,12 @@ exports.login = async (req, res) => {
         if (!isCorrect) {
             return res.status(400).json({
                 status: 'fail',
-                message: 'Incorrect username or password'
+                message: 'Incorrect username or password',
+                errorMessage: error
             })
         }
 
-        assignToRedis(user,req)
+        assignToRedis(user, req)
         // sess.username = username
         // sess.password = password
 
@@ -57,11 +60,12 @@ exports.login = async (req, res) => {
     } catch (error) {
         res.status(400).json({
             status: 'fail',
+            errorMessage: error
         })
     }
 }
 
-assignToRedis = (user,req) => {
+assignToRedis = (user, req) => {
     req.session.user = user;
 }
 
